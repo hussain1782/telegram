@@ -1,0 +1,48 @@
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+
+# توكن البوت الذي تحصلت عليه من BotFather
+TOKEN = "6903878622:AAGr1UZQcQRfauj0LHKKw3aChYy8eyPN6oM"
+
+# إعداد البوت باستخدام التوكن الخاص بك
+updater = Updater(TOKEN, use_context=True)
+
+# قائمة المنتجات (يمكنك تعديل هذه القائمة لاحقًا)
+products = {
+    "product1": {"name": "Product 1", "price": 10, "description": "This is product 1"},
+    "product2": {"name": "Product 2", "price": 15, "description": "This is product 2"},
+}
+
+# دالة بدء البوت
+def start(update: Update, context: CallbackContext):
+    buttons = [
+        [InlineKeyboardButton(products[key]["name"], callback_data=key)]
+        for key in products
+    ]
+    update.message.reply_text(
+        "مرحبًا بك في المتجر! اختر المنتج الذي ترغب في شرائه:",
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+
+# دالة لمعالجة اختيارات المستخدمين
+def button(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    product_key = query.data
+    product = products[product_key]
+
+    # إرسال رسالة تحتوي على تفاصيل المنتج
+    query.edit_message_text(
+        f"اخترت {product['name']}.\n\n"
+        f"الوصف: {product['description']}\n"
+        f"السعر: {product['price']}$\n\n"
+        "لإكمال الطلب، يرجى التواصل معنا مباشرة."
+    )
+
+# ربط الدوال بالأوامر
+updater.dispatcher.add_handler(CommandHandler('start', start))
+updater.dispatcher.add_handler(CallbackQueryHandler(button))
+
+# بدء البوت
+updater.start_polling()
+updater.idle()
